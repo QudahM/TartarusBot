@@ -7,8 +7,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
-TARGET_USER_ID = os.getenv("DISCORD_TARGET")
-GUILD_ID = os.getenv("DISCORD_GUILD")
+TARGET_USER_ID = int(os.getenv("DISCORD_TARGET", 0))
+GUILD_ID = int(os.getenv("DISCORD_GUILD", 0))
 
 intents = discord.Intents.default()
 intents.members = True  # Required for accessing members
@@ -24,7 +24,7 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 async def timeout_member():
     guild = bot.get_guild(GUILD_ID)
     member = guild.get_member(TARGET_USER_ID)
-    duration = timedelta(seconds=18)
+    duration = timedelta(seconds=1800)
     reason = "COMEBACK TO HELL MY SON"
     await member.timeout(duration, reason=reason)
     print(f"Timed out {member.display_name} at {datetime.now()}")
@@ -34,7 +34,7 @@ async def daily_timeout():
     est = pytz.timezone('US/Eastern')
     now = datetime.now(est)
 
-    if now.hour == 4 and now.minute == 29:
+    if now.hour == 4 and now.minute == 58:
         await timeout_member()
 
 @bot.event
