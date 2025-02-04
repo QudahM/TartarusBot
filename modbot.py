@@ -34,7 +34,8 @@ async def daily_timeout():
     est = pytz.timezone('US/Eastern')
     now = datetime.now(est)
 
-    if now.hour == 4 and now.minute == 58:
+#someone is getting timed out at 10:29 PM EST
+    if now.hour == 22 and now.minute == 29:
         await timeout_member()
 
 @bot.event
