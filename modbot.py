@@ -9,8 +9,8 @@ from dotenv import load_dotenv
 # Load the environment variables
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
-TARGET_CHANNEL_ID = int(os.getenv("DISCORD_CHANNEL", 0))  # Keep the channel ID you want to target
-TARGET_USER_ID = int(os.getenv("DISCORD_TARGET", 0))  # Keep the user ID you want to target
+TARGET_CHANNEL_ID = list(map(int, os.getenv("DISCORD_CHANNEL", "").split(',')))  # Keep the channel ID you want to target
+TARGET_USER_ID = list(map(int, os.getenv("DISCORD_TARGET", "").split(',')))  # Keep the user ID you want to target
 
 # Create a bot instance with the necessary intents
 intents = discord.Intents.default() 
@@ -23,7 +23,6 @@ intents.message_content = True # Message content
 bot = commands.Bot(command_prefix='&', intents=intents)
 
 async def timeout_member(member, channel):
-    
     try:
         # Send a message to the channel before timing out the user
         countdown_messages = [
@@ -54,15 +53,16 @@ async def daily_timeout():
     # Trigger at 10:29 PM EST
     if now.hour == 0 and now.minute == 00:
         for guild in bot.guilds:
-            # Get the member and channel
-            member = guild.get_member(TARGET_USER_ID)
-            channel = guild.get_channel(TARGET_CHANNEL_ID)
+            for user_id, channel_id in zip(TARGET_USER_ID, TARGET_CHANNEL_ID):
+                # Get the member and channel
+                member = guild.get_member(user_id)
+                channel = guild.get_channel(channel_id)
             
-            # Check if the member is in the guild and if the bot has permissions to send messages in the channel
-            if member and channel and channel.permissions_for(guild.me).send_messages:
-                await timeout_member(member, channel)
-            else:
-                print(f"Failed to find channel or send message in {guild.name}")
+                # Check if the member is in the guild and if the bot has permissions to send messages in the channel
+                if member and channel and channel.permissions_for(guild.me).send_messages:
+                    await timeout_member(member, channel)
+                else:
+                    print(f"Failed to find channel or send message in {guild.name}")
 
 # Event to print the bot's name when it connects to Discord
 @bot.event
@@ -78,7 +78,7 @@ async def timeout_error(error):
 # Command to manually timeout a user
 @bot.command()
 @commands.has_permissions(moderate_members=True)
-async def manual_timeout(ctx):
+async def manual_timeout(ctx, user_id: str, channel_id: str):
     # Get the member and channel
     member = ctx.guild.get_member(TARGET_USER_ID)
     channel = ctx.guild.get_channel(TARGET_CHANNEL_ID)
