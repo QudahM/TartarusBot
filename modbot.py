@@ -1,93 +1,23 @@
-import discord 
-from discord.ext import commands, tasks # Needed for bot
-import pytz # Needed for timezone
-from datetime import datetime, timedelta # Needed for time
-import asyncio # Needed for sleep
-import os # Needed for environment variables
-from dotenv import load_dotenv 
+import discord
+from discord.ext import commands
+import os
+from dotenv import load_dotenv
 
-# Load the environment variables
 load_dotenv()
-TOKEN = os.getenv("DISCORD_TOKEN")
-TARGET_CHANNEL_ID = list(map(int, os.getenv("DISCORD_CHANNEL", "").split(',')))  # Keep the channel ID you want to target
-TARGET_USER_ID = list(map(int, os.getenv("DISCORD_TARGET", "").split(',')))  # Keep the user ID you want to target
+TOKEN = os.getenv('DISCORD_TOKEN')
 
-# Create a bot instance with the necessary intents
-intents = discord.Intents.default() 
-intents.members = True # Member object
-intents.guilds = True # Guild object
-intents.messages = True # Message object
-intents.message_content = True # Message content
+intents = discord.Intents.default()
+intents.members = True
+intents.guilds = True
+intents.messages = True
+intents.message_content = True
 
-# Create a bot instance with the necessary intents and command prefix (&)
 bot = commands.Bot(command_prefix='&', intents=intents)
 
-async def timeout_member(member, channel):
-    try:
-        # Send a message to the channel before timing out the user
-        countdown_messages = [
-            f"The shadows of Tartarus whisper your name {member.mention} 3...",
-            "Say your goodbyes 2...",
-            "Or not 1...",
-            "HAHAHAHAHA 🔥🔥🔥"
-        ]
-        for msg in countdown_messages:
-            await channel.send(msg)
-            await asyncio.sleep(1)
-            
-        # Timeout the user
-        duration = timedelta(seconds=43000)
-        reason = "COMEBACK TO HELL MY SON"
-        
-        # Timeout the user
-        await member.timeout(duration, reason=reason)
-        print(f"Timed out {member.display_name} in {member.guild.name} at {datetime.now()}")
-    except Exception as e:
-        print(f"Failed to timeout {member.display_name} in {member.guild.name}: {e}")
-
-@tasks.loop(minutes=1)
-async def daily_timeout():
-    est = pytz.timezone('US/Eastern')
-    now = datetime.now(est)
-
-    # Trigger at 10:29 PM EST
-    if now.hour == 0 and now.minute == 00:
-        for guild in bot.guilds:
-            for user_id, channel_id in zip(TARGET_USER_ID, TARGET_CHANNEL_ID):
-                # Get the member and channel
-                member = guild.get_member(user_id)
-                channel = guild.get_channel(channel_id)
-            
-                # Check if the member is in the guild and if the bot has permissions to send messages in the channel
-                if member and channel and channel.permissions_for(guild.me).send_messages:
-                    await timeout_member(member, channel)
-                else:
-                    print(f"Failed to find channel or send message in {guild.name}")
-
-# Event to print the bot's name when it connects to Discord
-@bot.event
-async def on_ready():
-    print(f'{bot.user} has connected to Discord!')
-    daily_timeout.start()
-
-# Event to handle errors
-@daily_timeout.error
-async def timeout_error(error):
-    print(f"An error occurred: {error}")
-
-# Command to manually timeout a user
-@bot.command()
-@commands.has_permissions(moderate_members=True)
-async def manual_timeout(ctx, user_id: str, channel_id: str):
-    # Get the member and channel
-    member = ctx.guild.get_member(TARGET_USER_ID)
-    channel = ctx.guild.get_channel(TARGET_CHANNEL_ID)
-    if member and channel:
-        # Timeout the user from the whole server 
-        await timeout_member(member, channel)
-        await ctx.send(f"Timed out {member.display_name}")
-    else:
-        await ctx.send("User not found in this server.")
+initial_extensions = ['cogs.events', 'cogs.commands', 'cogs.tasks']
 
 if __name__ == '__main__':
-    bot.run(TOKEN)
+    for extension in initial_extensions:
+        bot.load_extension(extension)
+
+bot.run(TOKEN)
