@@ -1,6 +1,5 @@
-import discord
+import discord, os, asyncio
 from discord.ext import commands
-import os
 from dotenv import load_dotenv
 
 load_dotenv()
