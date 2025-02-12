@@ -16,7 +16,6 @@ TARGET_USER_ID = int(os.getenv("DISCORD_TARGET", 0))  # Keep the user ID you wan
 intents = discord.Intents.default() 
 intents.members = True # Member object
 intents.guilds = True # Guild object
-intents.presences = True # Presence object
 intents.messages = True # Message object
 intents.message_content = True # Message content
 
@@ -24,19 +23,21 @@ intents.message_content = True # Message content
 bot = commands.Bot(command_prefix='&', intents=intents)
 
 async def timeout_member(member, channel):
-
+    
     try:
         # Send a message to the channel before timing out the user
-        await channel.send(f"The shadows of Tartarus whisper your name {member.mention} 3...")
-        await asyncio.sleep(1)
-        await channel.send("Say your goodbyes 2...")
-        await asyncio.sleep(1)
-        await channel.send("Or not 1...")
-        await asyncio.sleep(1)
-        await channel.send("HAHAHAHAHA 🔥🔥🔥")
-
+        countdown_messages = [
+            f"The shadows of Tartarus whisper your name {member.mention} 3...",
+            "Say your goodbyes 2...",
+            "Or not 1...",
+            "HAHAHAHAHA 🔥🔥🔥"
+        ]
+        for msg in countdown_messages:
+            await channel.send(msg)
+            await asyncio.sleep(1)
+            
         # Timeout the user
-        duration = timedelta(seconds=43)
+        duration = timedelta(seconds=43000)
         reason = "COMEBACK TO HELL MY SON"
         
         # Timeout the user
@@ -51,7 +52,7 @@ async def daily_timeout():
     now = datetime.now(est)
 
     # Trigger at 10:29 PM EST
-    if now.hour == 5 and now.minute == 8:
+    if now.hour == 0 and now.minute == 00:
         for guild in bot.guilds:
             # Get the member and channel
             member = guild.get_member(TARGET_USER_ID)
