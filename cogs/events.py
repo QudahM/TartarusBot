@@ -1,5 +1,7 @@
 from discord.ext import commands
-from cogs.tasks import daily_timeout
+import asyncio
+
+# from utils.timeout_member import timeout_member
 
 class EventHandlers(commands.Cog):
     def __init__(self, bot):
@@ -8,11 +10,16 @@ class EventHandlers(commands.Cog):
     @commands.Cog.listener()
     async def on_ready(self):
         print(f'{self.bot.user} has connected to Discord!')
-        daily_timeout.start(self.bot)
 
-    @daily_timeout.error
-    async def timeout_error(self, error):
-        print(f"An error occurred: {error}")
+        while not self.bot.get_cog('BackgroundTasks'):
+            print("Waiting for BackgroundTasks to load...")
+            await asyncio.sleep(2)
 
-def setup(bot):
-    bot.add_cog(EventHandlers(bot))
+        background_tasks = self.bot.get_cog('BackgroundTasks')
+
+        if hasattr(background_tasks, "daily_timeout") and not background_tasks.daily_timeout.is_running():
+            background_tasks.daily_timeout.start()
+            print("✅ Started daily timeout task")
+
+async def setup(bot):
+    await bot.add_cog(EventHandlers(bot))
